@@ -10,6 +10,13 @@ menuconfig SAMPLES_RUST
 
 if SAMPLES_RUST
 
+config SAMPLE_RUST_HELLO_WORLD
+	tristate "Print Helloworld in Rust"
+	help
+	  Print Helloworld in Rust.
+
+	  If unsure, say N.
+
 config SAMPLE_RUST_MINIMAL
 	tristate "Minimal"
 	help
@@ -162,5 +169,7 @@ config SAMPLE_RUST_SELFTESTS
 	  This option builds the self test cases for Rust.
 
 	  If unsure, say N.
+
+
 
 endif # SAMPLES_RUST
