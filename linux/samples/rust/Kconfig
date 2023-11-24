@@ -15,6 +15,9 @@ config SAMPLE_RUST_HELLO_WORLD
 	help
 	  Print Helloworld in Rust.
 
+	  To compile this as a module, choose M here:
+	  the module will be called rust_minimal.
+
 	  If unsure, say N.
 
 config SAMPLE_RUST_MINIMAL

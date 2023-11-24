@@ -8,7 +8,7 @@ use kernel::prelude::*;
 use kernel::sync::Mutex;
 use kernel::{chrdev, file};
 
-const GLOBALMEM_SIZE: usize = 0x1000;
+const GLOBALMEM_SIZE: usize = 0x10;
 
 module! {
     type: RustChrdev,
@@ -32,6 +32,7 @@ impl file::Operations for RustFile {
     type Data = Box<Self>;
 
     fn open(_shared: &(), _file: &file::File) -> Result<Box<Self>> {
+        pr_info!("RustFile open\n");
         Ok(
             Box::try_new(RustFile {
                 inner: &GLOBALMEM_BUF
@@ -39,12 +40,27 @@ impl file::Operations for RustFile {
         )
     }
 
-    fn write(_this: &Self,_file: &file::File,_reader: &mut impl kernel::io_buffer::IoBufferReader,_offset:u64,) -> Result<usize> {
-        Err(EPERM)
+    fn write(this: &Self,_file: &file::File,reader: &mut impl kernel::io_buffer::IoBufferReader,_offset:u64,) -> Result<usize> {
+        let total_size  = reader.len();
+        pr_info!("RustFile write, size: {}\n", total_size);
+        if total_size > GLOBALMEM_SIZE {
+            return Err(ENOMEM);
+        }
+        let buf = &mut this.inner.lock();
+
+        reader.read_slice(&mut buf[..total_size])?;
+        Ok(total_size)
     }
 
-    fn read(_this: &Self,_file: &file::File,_writer: &mut impl kernel::io_buffer::IoBufferWriter,_offset:u64,) -> Result<usize> {
-        Err(EPERM)
+    fn read(this: &Self,_file: &file::File,writer: &mut impl kernel::io_buffer::IoBufferWriter,offset:u64,) -> Result<usize> {
+        let buf = &mut *this.inner.lock();
+        pr_info!("RustFile read, offset: {}\n", offset);
+        let offset = offset as usize;
+        if offset >= GLOBALMEM_SIZE {
+            return Err(ENOMEM);
+        }
+        writer.write_slice(&buf[offset..])?;
+        Ok(buf.len())
     }
 }
 
